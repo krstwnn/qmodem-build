@@ -1,4 +1,4 @@
-name: Build QModem for OpenWrt 24.10.5 armsr/armv8
+name: Build QModem armsr/armv8 (TarGz Output)
 
 on:
   workflow_dispatch:
@@ -7,6 +7,11 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
+      - name: Checkout Kode
+        uses: actions/checkout@v4
+        with:
+          path: qmodem_src
+
       - name: Install Dependencies
         run: |
           sudo apt-get update
@@ -17,27 +22,17 @@ jobs:
         run: |
           PAGE_URL="https://downloads.openwrt.org/releases/24.10.5/targets/armsr/armv8/"
           SDK_FILE=$(curl -s $PAGE_URL | grep -oE 'openwrt-sdk-[^"]+armsr-armv8[^"]+\.Linux-x86_64\.tar\.(xz|zst)' | head -n 1)
-          
-          if [ -z "$SDK_FILE" ]; then
-            echo "Error: File SDK tidak ditemukan di $PAGE_URL"
-            exit 1
-          fi
-          
-          echo "Mengunduh SDK: ${PAGE_URL}${SDK_FILE}"
           wget -O sdk_archive "${PAGE_URL}${SDK_FILE}"
-          
           mkdir sdk_dir
           tar -xf sdk_archive -C sdk_dir --strip-components=1
 
-      - name: Update and Install All Feeds
+      - name: Setup Feeds
         working-directory: ./sdk_dir
         run: |
-          # 1. Unduh dan instal semua paket bawaan OpenWrt (Wajib untuk LuCI)
           ./scripts/feeds update -a
           ./scripts/feeds install -a
-          
-          # 2. Tambahkan dan instal paket QModem
-          echo 'src-git qmodem https://github.com/FUjr/QModem.git;main' >> feeds.conf.default
+          # Menggunakan folder lokal hasil checkout sebagai sumber
+          echo "src-link qmodem $GITHUB_WORKSPACE/qmodem_src" >> feeds.conf.default
           ./scripts/feeds update qmodem
           ./scripts/feeds install -a -p qmodem
 
@@ -50,8 +45,20 @@ jobs:
           make package/luci-app-qmodem-mwan/compile V=s -j$(nproc)
           make package/luci-app-qmodem-ttl/compile V=s -j$(nproc)
 
-      - name: Upload IPK Artifacts
+      - name: Buat Arsip Tar.gz
+        run: |
+          # 1. Buat folder sementara untuk menampung semua file .ipk hasil build
+          mkdir -p output_folder
+          find sdk_dir/bin/packages/ -name "*.ipk" -exec cp {} output_folder/ \;
+          
+          # 2. Kompres folder tersebut menjadi file .tar.gz
+          tar -cvzf qmodem_armsr_armv8.tar.gz -C output_folder .
+          
+          echo "Arsip berhasil dibuat: qmodem_armsr_armv8.tar.gz"
+
+      - name: Upload ke GitHub Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: QModem-OpenWrt-24.10.5-armsr-armv8
-          path: ./sdk_dir/bin/packages/*/qmodem/*.ipk
+          name: QModem-OpenWrt-24.10.5-Tarball
+          # Kita hanya mengunggah SATU file ini saja
+          path: qmodem_armsr_armv8.tar.gz
