@@ -16,7 +16,6 @@ jobs:
       - name: Download and Extract OpenWrt SDK
         run: |
           PAGE_URL="https://downloads.openwrt.org/releases/24.10.5/targets/armsr/armv8/"
-          # Kode pencarian diperbarui agar bisa menangkap format .tar.zst atau .tar.xz
           SDK_FILE=$(curl -s $PAGE_URL | grep -oE 'openwrt-sdk-[^"]+armsr-armv8[^"]+\.Linux-x86_64\.tar\.(xz|zst)' | head -n 1)
           
           if [ -z "$SDK_FILE" ]; then
@@ -30,9 +29,14 @@ jobs:
           mkdir sdk_dir
           tar -xf sdk_archive -C sdk_dir --strip-components=1
 
-      - name: Add QModem Feed
+      - name: Update and Install All Feeds
         working-directory: ./sdk_dir
         run: |
+          # 1. Unduh dan instal semua paket bawaan OpenWrt (Wajib untuk LuCI)
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          
+          # 2. Tambahkan dan instal paket QModem
           echo 'src-git qmodem https://github.com/FUjr/QModem.git;main' >> feeds.conf.default
           ./scripts/feeds update qmodem
           ./scripts/feeds install -a -p qmodem
