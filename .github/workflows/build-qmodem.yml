@@ -22,9 +22,9 @@ jobs:
       - name: Download and extract OpenWrt SDK
         run: |
           # Ganti URL di bawah ini sesuai dengan path yang Anda temukan di browser
-          wget -r -nd -l1 --no-parent -A 'openwrt-sdk-*.tar.xz' https://downloads.openwrt.org/releases/24.10.2/targets/armsr/armv8/
+          wget -r -nd -l1 --no-parent -A 'openwrt-sdk-*.tar.zst' https://downloads.openwrt.org/releases/24.10.2/targets/armsr/armv8/
           
-          tar -xf openwrt-sdk-*.tar.xz
+          tar -xf openwrt-sdk-*.tar.zst
           mv openwrt-sdk-*/ openwrt-sdk/
 
       - name: Add modem_feeds repository
