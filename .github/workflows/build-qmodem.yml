@@ -31,7 +31,8 @@ jobs:
       - name: Clone QModem ke dalam Package SDK
         run: |
           cd openwrt-sdk
-          git clone https://github.com/feryw/QModem.git package/QModem
+          # Ubah direktori tujuan menjadi huruf kecil (qmodem)
+          git clone https://github.com/feryw/QModem.git package/qmodem
 
       - name: Update Feeds OpenWrt
         run: |
@@ -43,8 +44,8 @@ jobs:
         run: |
           cd openwrt-sdk
           make defconfig
-          # Mengompilasi paket QModem dan dependensinya
-          make package/QModem/compile V=s
+          # Pastikan path target menggunakan huruf kecil juga
+          make package/qmodem/compile V=s
 
       - name: Siapkan File Output (.ipk)
         run: |
