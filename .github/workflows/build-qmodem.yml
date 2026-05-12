@@ -22,33 +22,39 @@ jobs:
 
       - name: Download and extract OpenWrt SDK 23.05
         run: |
-          # Mengunduh SDK dari URL spesifik 23.05.6 armsr/armv8
+          # Mengunduh SDK dari URL spesifik 23.05 armsr/armv8
           wget -r -nd -l1 --no-parent -A 'openwrt-sdk-*.tar.xz' https://downloads.openwrt.org/releases/23.05.5/targets/armsr/armv8/
           
           tar -xf openwrt-sdk-*.tar.xz
           mv openwrt-sdk-*/ openwrt-sdk/
 
-    - name: Clone QModem ke dalam Package SDK
-      run: |
-        cd openwrt-sdk
-        git clone https://github.com/feryw/QModem.git package/QModem
+      - name: Clone QModem ke dalam Package SDK
+        run: |
+          cd openwrt-sdk
+          git clone https://github.com/feryw/QModem.git package/QModem
 
-    - name: Update Feeds OpenWrt
-      run: |
-        cd openwrt-sdk
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
+      - name: Update Feeds OpenWrt
+        run: |
+          cd openwrt-sdk
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
 
-    - name: Konfigurasi dan Compile QModem
-      run: |
-        cd openwrt-sdk
-        make defconfig
-        # Mengompilasi paket QModem dan dependensinya
-        make package/QModem/compile V=s
+      - name: Konfigurasi dan Compile QModem
+        run: |
+          cd openwrt-sdk
+          make defconfig
+          # Mengompilasi paket QModem dan dependensinya
+          make package/QModem/compile V=s
 
-    - name: Upload Hasil Compile (.ipk)
-      uses: actions/upload-artifact@v4
-      with:
-        name: QModem-Packages-aarch64
-        # Mencari dan mengambil semua file .ipk yang berhasil dibuat
-        path: openwrt-sdk/bin/packages/**/*.ipk
+      - name: Siapkan File Output (.ipk)
+        run: |
+          # Membuat folder terpisah untuk isolasi hasil build QModem
+          mkdir -p output_ipk
+          # Mencari hanya file berekstensi .ipk yang memiliki unsur nama "qmodem" dan memindahkannya
+          find openwrt-sdk/bin/ -type f -iname "*qmodem*.ipk" -exec cp {} output_ipk/ \;
+
+      - name: Upload Hasil Compile (.ipk)
+        uses: actions/upload-artifact@v4
+        with:
+          name: QModem-Packages-aarch64
+          path: output_ipk/
