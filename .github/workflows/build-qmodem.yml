@@ -23,7 +23,7 @@ jobs:
       - name: Download and extract OpenWrt SDK 23.05.6
         run: |
           # Mengunduh SDK dari URL spesifik 23.05.6 armsr/armv8
-          wget -r -nd -l1 --no-parent -A 'openwrt-sdk-*.tar.xz' https://downloads.openwrt.org/releases/23.05.6/targets/armsr/armv8/
+          wget -r -nd -l1 --no-parent -A 'openwrt-sdk-*.tar.xz' https://downloads.openwrt.org/releases/23.05.5/targets/armsr/armv8/
           
           tar -xf openwrt-sdk-*.tar.xz
           mv openwrt-sdk-*/ openwrt-sdk/
