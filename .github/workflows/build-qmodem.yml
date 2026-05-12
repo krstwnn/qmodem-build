@@ -45,11 +45,7 @@ jobs:
           cd openwrt-sdk
           make defconfig
           
-          # Buat file penanda waktu sebelum proses compile dimulai
-          touch .build_start
-          
           # Compile inti qmodem beserta paket UI (LuCI)-nya
-          # Mengompilasi luci-app otomatis akan memanggil dependensi lain (quectel-CM, sms-tool, dll)
           make package/qmodem/compile V=s
           make package/luci-app-qmodem/compile V=s
           make package/luci-app-qmodem-sms/compile V=s
@@ -58,9 +54,16 @@ jobs:
         run: |
           mkdir -p output_ipk
           
-          # Ambil HANYA file .ipk yang baru terbuat SETELAH penanda .build_start dibuat
-          # Ini mengabaikan paket base/default yang bikin bengkak 83MB
-          find openwrt-sdk/bin/ -type f -name "*.ipk" -newer openwrt-sdk/.build_start -exec cp {} output_ipk/ \;
+          # Mencari dan menyalin HANYA paket-paket spesifik yang dibutuhkan QModem
+          find openwrt-sdk/bin/ -type f \( \
+            -iname "*qmodem*.ipk" -o \
+            -iname "*ndisc6*.ipk" -o \
+            -iname "*quectel-CM*.ipk" -o \
+            -iname "*sms-forwarder*.ipk" -o \
+            -iname "*sms-tool*.ipk" -o \
+            -iname "*tom_modem*.ipk" -o \
+            -iname "*ubus-at-daemon*.ipk" \
+          \) -exec cp {} output_ipk/ \;
 
       - name: Upload Hasil Compile (.ipk)
         uses: actions/upload-artifact@v4
